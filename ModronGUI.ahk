@@ -17,6 +17,13 @@ global ScriptSpeed := 25
 ;end of user settings
 ;====================
 
+global g_hwnd := 0
+;debug loop speed
+global g_ltime := 0
+global g_lstart := 0
+global g_lnum := 0
+global g_lavg := 0
+
 /* Changes
 1. Fixes to Loading Zone function to help with invalid instance issues.
 2. Modify Set Formation function to disable Briv animation canceling after stack farming and before modron reset.
@@ -311,6 +318,9 @@ Gui, MyWindow:Add, Text, x15 y+10 %statTabTxtWidth%, Current `Run `Time:
 Gui, MyWindow:Add, Text, vdtCurrentRunTimeID x+2 w50, % dtCurrentRunTime
 Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Total `Run `Time:
 Gui, MyWindow:Add, Text, vdtTotalTimeID x+2 w50, % dtTotalTime
+
+Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Loop Time Avg:
+Gui, MyWindow:Add, Text, vg_LavgID x+2 w50, % g_lavg
 Gui, MyWindow:Font, w700
 Gui, MyWindow:Add, Text, x15 y+10, Stats updated once per run:
 Gui, MyWindow:Font, w400
@@ -598,6 +608,7 @@ SafetyCheck()
         If (Not WinExist("ahk_exe IdleDragons.exe"))
           Return
 
+		g_hwnd := WinExist("ahk_exe IdleDragons.exe")
         ;the script doesn't update GUI with elapsed time while IC is loading, opening the address, or readying base address, to minimize use of CPU.
         GuiControl, MyWindow:, gloopID, Opening `Process
         Sleep gOpenProcess
@@ -652,7 +663,7 @@ CheckForFailedConv()
         {
             LoadAdventure()
         }
-        SafetyCheck()
+        SafetyCheck() ; Restart IC
         gStackFail := 2
         return
     }
@@ -767,7 +778,6 @@ RegexMatchAll(h, n)
 ;Untested may not work with IC
 DirectedInputMod(m, k)
 {
-    SafetyCheck()
     hwnd := WinExist("ahk_exe IdleDragons.exe")
     ControlFocus,, ahk_id %hwnd%
 	vkm := Format("0x{:X}", GetKeyVK(Trim(m, "{}")))
@@ -784,8 +794,9 @@ DirectedInputMod(m, k)
 
 DirectedInput(s) 
 {
-    SafetyCheck()
-    hwnd := WinExist("ahk_exe IdleDragons.exe")
+	if(!g_hwnd)
+	g_hwnd := WinExist("ahk_exe IdleDragons.exe")
+    hwnd := g_hwnd
     ControlFocus,, ahk_id %hwnd%
 	m := RegExMatchAll(s, "O)([^{]|{[^}]+})")
 	for k, v in m
@@ -817,10 +828,19 @@ SetFormation(gLevel_Number)
         GuiControl, MyWindow:, gloopID, ReadTransitioning
         while (ElapsedTime < 5000 AND !ReadQuestRemaining(1))
         {
+			if(g_lstart != 0)
+			{
+				g_ltime += A_TickCount - g_lstart
+				g_lnum += 1
+				g_lavg := g_ltime / g_lnum
+			}
+			g_lstart := A_TickCount
+			GuiControl, MyWindow:, g_LavgID, % Round(g_lavg, 2)   
             DirectedInput("{Right}")
             ElapsedTime := UpdateElapsedTime(StartTime)
             UpdateStatTimers()
         }
+		g_lstart := 0
         StartTime := A_TickCount
         ElapsedTime := 0
         gTime := ReadTimeScaleMultiplier(1)
@@ -855,7 +875,7 @@ LoadingZoneREV()
     {
         CloseIC()
         Sleep, 1000
-        SafetyCheck()
+        SafetyCheck() ; Restart IC
     }
     ;look for Briv no benched when spamming 'w' formation.
     StartTime := A_TickCount
@@ -872,7 +892,7 @@ LoadingZoneREV()
     {
         CloseIC()
         Sleep, 1000
-        SafetyCheck()
+        SafetyCheck() ; Restart IC
     }
 }
 
@@ -1015,7 +1035,7 @@ StackRestart()
         ElapsedTime := UpdateElapsedTime(StartTime)
         UpdateStatTimers()
     }
-    SafetyCheck()
+    SafetyCheck() ; Restart IC
     ;Game may save "q" formation before restarting, creating an endless restart loop. LoadinZone() should bring "w" back before triggering a second restart, but monsters could spawn before it does.
     ;this doesn't appear to help the issue above.
     DirectedInput("w")
@@ -1173,6 +1193,8 @@ GemFarm()
 
     loop 
     {
+		
+		SafetyCheck() ; Run once per loop
         GuiControl, MyWindow:, gLoopID, Main `Loop
         gLevel_Number := ReadCurrentZone(1)
         
@@ -1232,7 +1254,7 @@ GemFarm()
                 {
                     LoadAdventure()
                 }
-                SafetyCheck()
+                SafetyCheck() ; Restart IC
                 UpdateStartLoopStats(gLevel_Number)
                 gStackFail := 1
                 gPrevLevelTime := A_TickCount
@@ -1283,7 +1305,7 @@ CheckifStuck(gLevel_Number)
         {
             LoadAdventure()
         }
-        SafetyCheck()
+        SafetyCheck() ; Restart IC
         gPrevLevelTime := A_TickCount
     }
 }
