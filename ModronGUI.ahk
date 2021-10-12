@@ -835,7 +835,7 @@ SetFormation(gLevel_Number)
 				g_lavg := g_ltime / g_lnum
 			}
 			g_lstart := A_TickCount
-			GuiControl, MyWindow:, g_LavgID, % Round(g_lavg, 2)   
+			GuiControl, MyWindow:, g_LavgID, % Round(g_lavg, 2) . " " . g_lnum
             DirectedInput("{Right}")
             ElapsedTime := UpdateElapsedTime(StartTime)
             UpdateStatTimers()
@@ -1018,7 +1018,7 @@ StackRestart()
         ElapsedTime := UpdateElapsedTime(StartTime)
         UpdateStatTimers()
     }
-    Sleep 1000
+    Sleep 5000
     CloseIC()
     StartTime := A_TickCount
     ElapsedTime := 0
