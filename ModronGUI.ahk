@@ -10,8 +10,8 @@ CoordMode, Mouse, Client
 ;User settings not accessible via the GUI
 ;========================================
 ;variables to consider changing if restarts are causing issues
-global gOpenProcess	:= 10000	;time in milliseconds for your PC to open Idle Champions
-global gGetAddress := 5000		;time in milliseconds after Idle Champions is opened for it to read moduel base address from memory
+global gOpenProcess := 10000    ;time in milliseconds for your PC to open Idle Champions
+global gGetAddress := 5000      ;time in milliseconds after Idle Champions is opened for it to read moduel base address from memory
 global ScriptSpeed := 25
 ;====================
 ;end of user settings
@@ -124,26 +124,26 @@ global gSCGoldCount := SCGoldCount
 global gStackFail := 0
 
 ;globals for various timers
-global gSlowRunTime		:= 		
-global gFastRunTime		:= 100
-global gRunStartTime 	:=
-global gTotal_RunCount	:= 0
-global gStartTime 	    := 
-global gPrevLevelTime	:=	
-global gPrevRestart 	:=
-global gprevLevel 	    :=
+global gSlowRunTime     :=      
+global gFastRunTime     := 100
+global gRunStartTime    :=
+global gTotal_RunCount  := 0
+global gStartTime       := 
+global gPrevLevelTime   :=  
+global gPrevRestart     :=
+global gprevLevel       :=
 global dtCurrentLevelTime :=
 
 ;globals for reset tracking
 global gFailedStacking := 0
 global gFailedStackConv := 0
 ;globals used for stat tracking
-global gGemStart		:=
-global gCoreXPStart		:=
-global gGemSpentStart	:=
-global gRedGemsStart	:=
+global gGemStart        :=
+global gCoreXPStart     :=
+global gGemSpentStart   :=
+global gRedGemsStart    :=
 
-global gStackCountH	:=
+global gStackCountH :=
 global gStackCountSB :=
 
 ;define a new gui with tabs and buttons
@@ -325,7 +325,7 @@ Gui, MyWindow:Add, Text, vgSlowRunTimeID x+2 w50, % gSlowRunTime
 Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Avg. `Run `Time:
 Gui, MyWindow:Add, Text, vgAvgRunTimeID x+2 w50, % gAvgRunTime
 Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Fail `Run `Time:
-Gui, MyWindow:Add, Text, vgFailRunTimeID x+2 w50, % gFailRunTime	
+Gui, MyWindow:Add, Text, vgFailRunTimeID x+2 w50, % gFailRunTime    
 Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Fail Stack Conversion:
 Gui, MyWindow:Add, Text, vgFailedStackConvID x+2 w50, % gFailedStackConv
 Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Fail Stacking:
@@ -359,7 +359,7 @@ if (gDoChests)
     Gui, MyWindow:Add, Text, x15 y+5, Starting Silvers Opened: 
     Gui, MyWindow:Add, Text, vgSCSilversOpenedStartID x+2 w200,
     Gui, MyWindow:Add, Text, x15 y+5, Starting Golds Opened: 
-    Gui, MyWindow:Add, Text, vgSCGoldsOpenedStartID x+2 w200,	
+    Gui, MyWindow:Add, Text, vgSCGoldsOpenedStartID x+2 w200,   
     Gui, MyWindow:Add, Text, x15 y+5, Silvers Opened: 
     Gui, MyWindow:Add, Text, vgSCSilversOpenedID x+2 w200,
     Gui, MyWindow:Add, Text, x15 y+5, Golds Opened: 
@@ -749,11 +749,57 @@ DoUlts()
     }
 }
 
+;Pass Object Mode Option in regex string
+RegexMatchAll(h, n)
+{
+	r := []
+	p := 1
+	loop
+	{
+		if(!RegexMatch(h, n, m, p))
+			break
+		r.Push(m)
+		p := m.Pos + m.Len
+	}
+	return r
+}
+
+;Untested may not work with IC
+DirectedInputMod(m, k)
+{
+    SafetyCheck()
+    hwnd := WinExist("ahk_exe IdleDragons.exe")
+    ControlFocus,, ahk_id %hwnd%
+	vkm := Format("0x{:X}", GetKeyVK(Trim(m, "{}")))
+	vkk := Format("0x{:X}", GetKeyVK(Trim(k, "{}")))
+	PostMessage, 0x0100, %vkm%, 0,, ahk_id %hwnd%
+	Sleep, 10
+	PostMessage, 0x0100, %vkk%, 0,, ahk_id %hwnd%
+	Sleep, 10
+	PostMessage, 0x0101, %vkk%, 0xC0000001,, ahk_id %hwnd%
+	Sleep, 10
+	PostMessage, 0x0101, %vkm%, 0xC0000001,, ahk_id %hwnd%
+	Sleep, 10
+}
+
 DirectedInput(s) 
 {
     SafetyCheck()
-    ControlFocus,, ahk_exe IdleDragons.exe
-    ControlSend,, {Blind}%s%, ahk_exe IdleDragons.exe
+    hwnd := WinExist("ahk_exe IdleDragons.exe")
+    ControlFocus,, ahk_id %hwnd%
+	m := RegExMatchAll(s, "O)([^{]|{[^}]+})")
+	for k, v in m
+	{
+		vk := GetKeyVK(Trim(v.Value(1), "{}"))
+		if(vk)
+		{
+			vk := Format("0x{:X}", vk)
+			PostMessage, 0x0100, %vk%, 0,, ahk_id %hwnd%
+			Sleep, 10
+			PostMessage, 0x0101, %vk%, 0xC0000001,, ahk_id %hwnd%
+			Sleep, 10
+		}
+	}
     Sleep, %ScriptSpeed%
 }
 
@@ -1085,7 +1131,7 @@ UpdateStartLoopStats(gLevel_Number)
         {
             GuiControl, MyWindow:, RedGemsTotalID, 0
             GuiControl, MyWindow:, RedGemsPhrID, Pathetic
-        }	
+        }   
     }
     gRunStartTime := A_TickCount
     gPrevLevel := gLevel_Number
@@ -1099,7 +1145,7 @@ UpdateStatTimers()
     dtTotalTime := Round((A_TickCount - gStartTime) / 3600000, 2)
     GuiControl, MyWindow:, dtTotalTimeID, % dtTotalTime
     dtCurrentLevelTime := Round((A_TickCount - gPrevLevelTime) / 1000, 2)
-    GuiControl, MyWindow:, dtCurrentLevelTimeID, % dtCurrentLevelTime	
+    GuiControl, MyWindow:, dtCurrentLevelTimeID, % dtCurrentLevelTime   
 }
 
 UpdateElapsedTime(StartTime)
@@ -1229,7 +1275,7 @@ CheckifStuck(gLevel_Number)
     }
     
     dtCurrentLevelTime := Round((A_TickCount - gPrevLevelTime) / 1000, 2)
-    GuiControl, MyWindow:, dtCurrentLevelTimeID, % dtCurrentLevelTime		
+    GuiControl, MyWindow:, dtCurrentLevelTimeID, % dtCurrentLevelTime       
     if (dtCurrentLevelTime > 60)
     {
         CloseIC()
@@ -1311,7 +1357,7 @@ StuffToSpam(SendRight := 1, gLevel_Number := 1, hew := 1, formation := "")
     if (SendRight)
     var := "{Right}"
     if (gCtrlClickLeveling)
-    var := var "{Ctrl down}``{Ctrl up}"
+	DirectedInputMod("{Ctrl}", "``")
     else if (gClickLeveling)
     var := var "``"
     if (gContinuedLeveling > gLevel_Number)
