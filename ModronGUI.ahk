@@ -617,9 +617,9 @@ SafetyCheck()
         Sleep gGetAddress
         ModuleBaseAddress()
 
-        LoadingZoneREV()
-        if (gUlts)
-          DoUlts()
+        ;LoadingZoneREV()
+        ;if (gUlts)
+        ;  DoUlts()
         
         ;reset timer for checking if IC is stuck on a zone.
         gPrevLevelTime := A_TickCount
@@ -1018,7 +1018,7 @@ StackRestart()
         ElapsedTime := UpdateElapsedTime(StartTime)
         UpdateStatTimers()
     }
-    Sleep 5000
+    Sleep 15000
     CloseIC()
     StartTime := A_TickCount
     ElapsedTime := 0
@@ -1038,7 +1038,7 @@ StackRestart()
     SafetyCheck() ; Restart IC
     ;Game may save "q" formation before restarting, creating an endless restart loop. LoadinZone() should bring "w" back before triggering a second restart, but monsters could spawn before it does.
     ;this doesn't appear to help the issue above.
-    DirectedInput("w")
+    ;DirectedInput("w")
 }
 
 StackNormal()
@@ -1084,7 +1084,11 @@ StackFarm()
     StackRestart()
     stacks := GetNumStacksFarmed()
     if (stacks < gSBTargetStacks)
-    StackNormal()
+	{
+	    ++gFailedStacking
+        GuiControl, MyWindow:, gFailedStackingID, % gFailedStacking
+		StackRestart()
+	}
     gPrevLevelTime := A_TickCount
     DirectedInput("g")
 }
