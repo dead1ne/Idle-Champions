@@ -368,3 +368,12 @@ ReadHeroAliveBySlot(UpdateGUI := 0, GUIwindow := "MyWindow:", slot := 0)
     GuiControl, %GUIwindow%, ReadHeroAliveBySlotID, slot: %Slot% heroAlive: %var% %A_Hour%:%A_Min%:%A_Sec%.%A_MSec%
 	return var
 }
+
+ReadCalculatingOffline(UpdateGUI := 0, GUIWindow := "MyWindow:")
+{
+    Controller := idle.getAddressFromOffsets(pointerBaseController, arrayPointerOffsetsController*)
+    pointerArray := [0x8, 0x40, 0xC]
+    var := idle.read(Controller, "Int", pointerArray*)
+	
+	return var
+}

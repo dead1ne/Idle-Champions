@@ -616,6 +616,12 @@ SafetyCheck()
         GuiControl, MyWindow:, gloopID, Loading Module Base
         Sleep gGetAddress
         ModuleBaseAddress()
+		GuiControl, MyWindow:, gloopID, Calculating Offline Progress
+		
+		while(ReadCalculatingOffline())
+		{
+			Sleep, 25
+		}
 
         ;LoadingZoneREV()
         ;if (gUlts)
