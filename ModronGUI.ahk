@@ -1,7 +1,9 @@
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance force
 ;Modron Automation Gem Farming Script
 ;by mikebaldi1980
-global ScriptDate := "9/26/21"
+;modified by dead1ne
+global ScriptDate := "10/18/21"
 ;put together with the help from many different people. thanks for all the help.
 SetWorkingDir, %A_ScriptDir%
 CoordMode, Mouse, Client
@@ -16,13 +18,6 @@ global ScriptSpeed := 25
 ;====================
 ;end of user settings
 ;====================
-
-global g_hwnd := 0
-;debug loop speed
-global g_ltime := 0
-global g_lstart := 0
-global g_lnum := 0
-global g_lavg := 0
 
 /* Changes
 1. Fixes to Loading Zone function to help with invalid instance issues.
@@ -319,8 +314,8 @@ Gui, MyWindow:Add, Text, vdtCurrentRunTimeID x+2 w50, % dtCurrentRunTime
 Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Total `Run `Time:
 Gui, MyWindow:Add, Text, vdtTotalTimeID x+2 w50, % dtTotalTime
 
-Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Loop Time Avg:
-Gui, MyWindow:Add, Text, vg_LavgID x+2 w50, % g_lavg
+Gui, MyWindow:Add, Text, x15 y+2 %statTabTxtWidth%, Zone:
+Gui, MyWindow:Add, Text, vg_zoneID x+2 w50, 0
 Gui, MyWindow:Font, w700
 Gui, MyWindow:Add, Text, x15 y+10, Stats updated once per run:
 Gui, MyWindow:Font, w400
@@ -608,7 +603,6 @@ SafetyCheck()
         If (Not WinExist("ahk_exe IdleDragons.exe"))
           Return
 
-		g_hwnd := WinExist("ahk_exe IdleDragons.exe")
         ;the script doesn't update GUI with elapsed time while IC is loading, opening the address, or readying base address, to minimize use of CPU.
         GuiControl, MyWindow:, gloopID, Opening `Process
         Sleep gOpenProcess
@@ -800,9 +794,7 @@ DirectedInputMod(m, k)
 
 DirectedInput(s) 
 {
-	if(!g_hwnd)
-	g_hwnd := WinExist("ahk_exe IdleDragons.exe")
-    hwnd := g_hwnd
+	hwnd := WinExist("ahk_exe IdleDragons.exe")
     ControlFocus,, ahk_id %hwnd%
 	m := RegExMatchAll(s, "O)([^{]|{[^}]+})")
 	for k, v in m
@@ -834,19 +826,10 @@ SetFormation(gLevel_Number)
         GuiControl, MyWindow:, gloopID, ReadTransitioning
         while (ElapsedTime < 5000 AND !ReadQuestRemaining(1))
         {
-			if(g_lstart != 0)
-			{
-				g_ltime += A_TickCount - g_lstart
-				g_lnum += 1
-				g_lavg := g_ltime / g_lnum
-			}
-			g_lstart := A_TickCount
-			GuiControl, MyWindow:, g_LavgID, % Round(g_lavg, 2) . " " . g_lnum
             DirectedInput("{Right}")
             ElapsedTime := UpdateElapsedTime(StartTime)
             UpdateStatTimers()
         }
-		g_lstart := 0
         StartTime := A_TickCount
         ElapsedTime := 0
         gTime := ReadTimeScaleMultiplier(1)
@@ -1207,6 +1190,7 @@ GemFarm()
 		SafetyCheck() ; Run once per loop
         GuiControl, MyWindow:, gLoopID, Main `Loop
         gLevel_Number := ReadCurrentZone(1)
+		GuiControl, MyWindow:, g_zoneID, % gLevel_Number
         
         SetFormation(gLevel_Number)
 
