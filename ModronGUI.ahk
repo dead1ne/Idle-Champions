@@ -579,7 +579,7 @@ MyWindowGuiClose()
     return True
 }
 
-$`::
+$VKC0::
 Pause
 gPrevLevelTime := A_TickCount
 return
