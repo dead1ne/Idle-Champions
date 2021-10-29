@@ -792,7 +792,7 @@ DirectedInputMod(m, k)
 	Sleep, 10
 }
 
-DirectedInput(s) 
+DirectedInput(s, delay = 10) 
 {
 	hwnd := WinExist("ahk_exe IdleDragons.exe")
     ControlFocus,, ahk_id %hwnd%
@@ -804,9 +804,9 @@ DirectedInput(s)
 		{
 			vk := Format("0x{:X}", vk)
 			PostMessage, 0x0100, %vk%, 0,, ahk_id %hwnd%
-			Sleep, 10
+			Sleep, %delay%
 			PostMessage, 0x0101, %vk%, 0xC0000001,, ahk_id %hwnd%
-			Sleep, 10
+			Sleep, %delay%
 		}
 	}
     Sleep, %ScriptSpeed%
@@ -991,6 +991,13 @@ StackRestart()
     StartTime := A_TickCount
     ElapsedTime := 0
     GuiControl, MyWindow:, gloopID, Transitioning to Stack Restart
+	plvl := ReadCurrentZone()
+	while(plvl <= ReadCurrentZone())
+	{
+		DirectedInput("{Left}", 25)
+        ElapsedTime := UpdateElapsedTime(StartTime)
+        UpdateStatTimers()
+	}
     while (ReadTransitioning(1))
     {
         DirectedInput("w")
@@ -1007,7 +1014,8 @@ StackRestart()
         ElapsedTime := UpdateElapsedTime(StartTime)
         UpdateStatTimers()
     }
-    Sleep 15000
+	DirectedInput("w", 1000)
+    Sleep 5000
     CloseIC()
     StartTime := A_TickCount
     ElapsedTime := 0
